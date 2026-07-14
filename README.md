@@ -19,7 +19,7 @@ second factor that needs nothing but working outgoing email.
 
 **Login — the 6-digit code is entered as a field on the login form itself**
 
-![GM OTP login with the code field](assets/screenshot-login.png)
+![GM OTP login with the code field](assets/screenshot-login-v2.png)
 
 ## Features
 
