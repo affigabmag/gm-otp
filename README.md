@@ -1,9 +1,25 @@
 # GM OTP
 
+**Email 2FA for WordPress that just works — no authenticator app, no SMS gateway, no paid tier.**
+
+[![Release](https://img.shields.io/github/v/release/affigabmag/gm-otp)](https://github.com/affigabmag/gm-otp/releases)
+[![Tests](https://github.com/affigabmag/gm-otp/actions/workflows/tests.yml/badge.svg)](https://github.com/affigabmag/gm-otp/actions/workflows/tests.yml)
+![WordPress](https://img.shields.io/badge/WordPress-5.8%E2%80%937.0-21759b)
+![PHP](https://img.shields.io/badge/PHP-7.0%2B-8892bf)
+[![License: GPL v2](https://img.shields.io/badge/License-GPLv2-blue.svg)](LICENSE)
+
 Email-based one-time-password (OTP) for WordPress login. After a correct
 username and password, GM OTP emails the user a 6-digit code and requires it —
 as a third field on the same login form — before the login completes. A simple
 second factor that needs nothing but working outgoing email.
+
+## Why GM OTP
+
+- **Zero friction to set up** — if the site can send email, it works. No app enrolment, no phone numbers.
+- **Plays nicely with the messy real world** — tested against **Wordfence Login Security** (reCAPTCHA + AJAX login) and sites with **custom login pages**; it auto-picks an inline field or a dedicated dialog page depending on the login flow.
+- **Won't lock you out by accident** — can't be enabled until you confirm email delivery works and acknowledge the recovery path; if mail ever breaks you disable it by removing the plugin folder.
+- **Multisite-aware** — one network-wide switch, or per-site on single installs.
+- **No lock-in, no upsell** — GPLv2, one file split into tidy includes, with tests.
 
 - **Version:** 3.16.0
 - **Requires WordPress:** 5.8+
@@ -135,7 +151,39 @@ See [`readme.txt`](readme.txt) for the full changelog. Highlights:
 - **3.0.x–3.6.0** — role/user exemptions, login logo, log viewer, SMTP gate,
   WordPress.org readiness.
 
+## FAQ
+
+**Does it need an authenticator app or SMS?**
+No. The code is emailed. All you need is working outgoing mail (an SMTP plugin is recommended).
+
+**What if email breaks and I'm locked out?**
+OTP is only enforced while the plugin is active. Delete or rename the `gm-otp`
+folder via FTP/SSH/hosting file manager (or flip `gm_otp_enabled` off in the
+database) and normal login returns. The settings page makes you acknowledge
+this before enabling.
+
+**Does it work with Wordfence?**
+Yes. It bypasses Wordfence's own `wfls_captcha_verify` rejection when the
+credentials are genuinely valid, and handles its two-phase (admin-ajax →
+wp-login.php) login with a single-use grace token.
+
+**My site uses a custom login page — will the code field show?**
+For normal (non-AJAX) logins GM OTP redirects to a dedicated code dialog page,
+so it works even when a custom login page would drop an inline field.
+
+**Multisite?**
+Yes — a single network-wide switch controls every site (Network Admin →
+Settings → GM OTP).
+
+**Can I exempt some users?**
+Yes — exempt by role or by individual user.
+
+## Contributing
+
+Issues and PRs welcome — see [`CONTRIBUTING.md`](CONTRIBUTING.md). Run the test
+suite with `php tests/run.php`. To report a security issue, see
+[`SECURITY.md`](SECURITY.md).
+
 ## License
 
-Distributed under the terms of the GPLv2 (or later). See the plugin header in
-`gm-otp.php`.
+GPLv2 or later. See [`LICENSE`](LICENSE).
