@@ -3,7 +3,6 @@
 **Email 2FA for WordPress that just works — no authenticator app, no SMS gateway, no paid tier.**
 
 [![Release](https://img.shields.io/github/v/release/affigabmag/gm-otp)](https://github.com/affigabmag/gm-otp/releases)
-[![Tests](https://github.com/affigabmag/gm-otp/actions/workflows/tests.yml/badge.svg)](https://github.com/affigabmag/gm-otp/actions/workflows/tests.yml)
 ![WordPress](https://img.shields.io/badge/WordPress-5.8%E2%80%937.0-21759b)
 ![PHP](https://img.shields.io/badge/PHP-7.0%2B-8892bf)
 [![License: GPL v2](https://img.shields.io/badge/License-GPLv2-blue.svg)](LICENSE)
