@@ -11,6 +11,16 @@ second factor that needs nothing but working outgoing email.
 - **License:** GPLv2 or later
 - **Author:** Affiliate GM ([@affigabmag](https://github.com/affigabmag))
 
+## Screenshots
+
+**Settings — activation gates, attempts/lockout, login logo, and exemptions**
+
+![GM OTP settings page](assets/screenshot-settings.png)
+
+**Login — the 6-digit code is entered as a field on the login form itself**
+
+![GM OTP login with the code field](assets/screenshot-login.png)
+
 ## Features
 
 - **6-digit email code after password** — a lightweight second factor, no
