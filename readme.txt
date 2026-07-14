@@ -3,7 +3,7 @@ Contributors: affigabmag
 Tags: login, security, two factor, otp, email
 Requires at least: 5.8
 Tested up to: 7.0
-Stable tag: 3.12.1
+Stable tag: 3.16.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,6 +30,21 @@ Features:
 3. Configure under Settings > GM OTP (or Network Admin > Settings > GM OTP on multisite)
 
 == Changelog ==
+
+= 3.16.0 =
+* Moved the dialog page's static CSS out to assets/gm-otp-dialog.css (properly enqueued) instead of an inline style block. Data-driven scripts (nonces, timers, translated strings) remain inline by design.
+
+= 3.15.0 =
+* Internal refactor: split the single plugin file into includes/core.php (logging, log viewer, helpers), includes/admin.php (settings pages) and includes/login.php (OTP auth flow, inline field, dialog page) for easier maintenance. No functional change; behaviour verified with an automated test of the captcha-bypass, multisite-routing and AJAX/dialog decision logic.
+
+= 3.14.0 =
+* Automatic fallback for sites with a custom login page: normal (non-AJAX) logins now redirect to a dedicated code dialog page, while AJAX logins (e.g. Wordfence reCAPTCHA) keep the inline field. This fixes sites whose login form is a custom page (e.g. ql-registration) that would otherwise hijack the re-rendered login form and drop the inline code field. XML-RPC/REST logins are skipped (no way to prompt).
+
+= 3.13.1 =
+* Added a "Clear PHP Error Log" button next to "View PHP Error Log" (truncates it when PHP can write to it; warns if it's a shared/read-only system log).
+
+= 3.13.0 =
+* Added an always-visible "Clear Log" button next to "View Log" (with a confirmation), so the log can be wiped without opening it first — handy when old and new entries are mixed.
 
 = 3.12.1 =
 * Fixed the Save-button gating never actually taking effect: the script ran before the Save button existed on the page and bailed out, so Save stayed enabled. It now runs on DOMContentLoaded and correctly stays greyed out until both confirmation boxes are checked.

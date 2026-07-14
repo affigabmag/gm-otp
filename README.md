@@ -5,11 +5,36 @@ username and password, GM OTP emails the user a 6-digit code and requires it —
 as a third field on the same login form — before the login completes. A simple
 second factor that needs nothing but working outgoing email.
 
-- **Version:** 3.12.1
+- **Version:** 3.16.0
 - **Requires WordPress:** 5.8+
 - **Tested up to:** 7.0
 - **License:** GPLv2 or later
 - **Author:** Affiliate GM ([@affigabmag](https://github.com/affigabmag))
+
+## Repository layout
+
+```
+gm-otp.php          Bootstrap (header, constants, require_once of includes)
+includes/core.php   Logging, log viewer, shared helpers
+includes/admin.php  Settings pages, menu, action links, field renderers
+includes/login.php  OTP auth flow, inline field, and dialog page
+assets/             Dialog-page CSS + screenshots
+tests/              Stub-based unit tests (run under plain PHP CLI)
+dox/                Developer docs — see below
+```
+
+## Docs
+
+- [`dox/ARCHITECTURE.md`](dox/ARCHITECTURE.md) — file/function map, the two login transports, data storage.
+- [`dox/HISTORY.md`](dox/HISTORY.md) — how the plugin evolved.
+- [`dox/CLAUDE.md`](dox/CLAUDE.md) — conventions, release checklist, environment gotchas.
+
+## Tests
+
+```
+php tests/run.php          # captcha bypass, multisite routing, AJAX flow, grace token
+php tests/run-dialog.php   # non-AJAX login redirects to the dialog page
+```
 
 ## Screenshots
 

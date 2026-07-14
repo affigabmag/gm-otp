@@ -1,0 +1,26 @@
+/* GM OTP — dedicated code dialog page (wp-login.php?action=gm_otp).
+   Styles the login card as a centered dialog over a blurred backdrop. */
+
+body.login-action-gm_otp {
+	background: linear-gradient( 135deg, #2271b1, #135e96 );
+}
+
+body.login-action-gm_otp::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	background: rgba( 0, 0, 0, .45 );
+	backdrop-filter: blur( 8px );
+	-webkit-backdrop-filter: blur( 8px );
+	z-index: 1;
+}
+
+body.login-action-gm_otp #login {
+	position: relative;
+	z-index: 2;
+	background: #fff;
+	padding: 26px 24px 20px;
+	margin-top: 7vh;
+	border-radius: 12px;
+	box-shadow: 0 25px 60px rgba( 0, 0, 0, .4 );
+}
