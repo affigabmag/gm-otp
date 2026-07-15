@@ -20,7 +20,7 @@ second factor that needs nothing but working outgoing email.
 - **Multisite-aware** — one network-wide switch, or per-site on single installs.
 - **No lock-in, no upsell** — GPLv2, one file split into tidy includes, with tests.
 
-- **Version:** 3.16.0
+- **Version:** 3.18.2
 - **Requires WordPress:** 5.8+
 - **Tested up to:** 7.0
 - **License:** GPLv2 or later

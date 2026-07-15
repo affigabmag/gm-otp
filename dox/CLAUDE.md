@@ -58,6 +58,14 @@ functions and loads the real plugin main file). All must pass before release.
   flat zip. This is a server quirk, not something the plugin can detect.
 - Local's bundled PHP CLI has **mbstring off**; the test bootstrap stubs
   `mb_substr`/`mb_strlen`. Real WP servers have it.
+- **Encoding**: when carving/splitting files with PowerShell, read/write UTF-8
+  explicitly. `Get-Content` defaulting to Windows-1252 double-encoded every
+  `—`/`…` into mojibake (`â€"`) in 3.15.0. Verify no `â€` or U+FFFD remains
+  after any bulk file surgery.
+- **Admin page URL**: the settings page is a **top-level** menu
+  (`admin.php?page=gm-otp`), not `options-general.php`. Any form/link that
+  posts back to the settings page must use `admin.php?page=gm-otp`, or its
+  handler silently never runs.
 
 ## Build (Windows / PowerShell)
 

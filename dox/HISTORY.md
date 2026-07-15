@@ -57,6 +57,26 @@ work across three very different login environments without locking anyone out:
 
 - **3.16** — Moved the dialog page's static CSS to `assets/gm-otp-dialog.css`.
 
+- **3.17.0** — Fixed the dialog flow always redirecting to `wp-admin`. It now
+  mirrors core: applies the `login_redirect` filter (so LoginWP / Peter's Login
+  Redirect and QL Custom Registration/Redirector decide the destination) with
+  core's multisite/capability fallbacks. Added redirect tests.
+
+- **3.17.1** — Fixed garbled em-dashes/ellipses in the admin UI caused by an
+  encoding slip during the 3.15.0 file split; rewrote the lockout-risk text as
+  short bullets.
+
+- **3.18.0** — Logging is now opt-in via an "Enable logging" checkbox in the
+  Log section (off by default); `gm_otp_log()` no-ops until it's on.
+
+- **3.18.1** — When logging is off, the View Log / Clear Log buttons are shown
+  disabled.
+
+- **3.18.2** — Fixed the Log section's form posting to the old
+  `options-general.php` Settings URL (the page moved to a top-level menu in
+  3.11.2), which stopped the logging toggle from saving. It now posts to
+  `admin.php?page=gm-otp` and the setting persists.
+
 ## Distribution
 
 - Canonical package: a single `gm-otp/` folder (with `includes/` + `assets/`).

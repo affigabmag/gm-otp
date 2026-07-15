@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GM OTP
  * Description: After username/password check, requires a 6-digit code emailed to the user, entered as a 3rd field on the same login form, before login completes.
- * Version: 3.16.0
+ * Version: 3.18.2
  * Author: Affiliate GM
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -13,8 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GM_OTP_VERSION', '3.16.0' );
-define( 'GM_OTP_BUILD_TIME', '2026-07-14 15:30' );
+define( 'GM_OTP_VERSION', '3.18.2' );
+define( 'GM_OTP_BUILD_TIME', '2026-07-15 10:40' );
 
 /**
  * Show the build timestamp next to the version on the Plugins list
@@ -41,6 +41,7 @@ define( 'GM_OTP_EXEMPT_ROLES_OPTION', 'gm_otp_exempt_roles' );
 define( 'GM_OTP_EXEMPT_USERS_OPTION', 'gm_otp_exempt_users' );
 define( 'GM_OTP_SMTP_CONFIRMED_OPTION', 'gm_otp_smtp_confirmed' );
 define( 'GM_OTP_LOCKOUT_ACK_OPTION', 'gm_otp_lockout_ack' );
+define( 'GM_OTP_LOGGING_OPTION', 'gm_otp_logging_enabled' );
 define( 'GM_OTP_LOG_DIR', WP_CONTENT_DIR . '/gm-otp-logs' );
 define( 'GM_OTP_LOG_FILE', GM_OTP_LOG_DIR . '/otp.log' );
 

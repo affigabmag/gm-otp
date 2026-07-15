@@ -13,11 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * The code field lives directly on the login form (rendered by
  * gm_otp_render_field(), hooked on 'login_form') rather than a separate
- * page/action â€” needed for compatibility with AJAX-based login flows
+ * page/action — needed for compatibility with AJAX-based login flows
  * (e.g. Wordfence Login Security posts to admin-ajax.php, which broke the
  * old raw-HTML redirect page entirely). On success we simply return the
  * WP_User: core's own wp_signon() sets the auth cookie, fires 'wp_login',
- * and redirects â€” we don't need to touch any of that ourselves.
+ * and redirects — we don't need to touch any of that ourselves.
  */
 add_filter( 'authenticate', 'gm_otp_maybe_require_otp', 30, 3 );
 function gm_otp_maybe_require_otp( $user, $username, $password ) {
@@ -32,26 +32,26 @@ function gm_otp_maybe_require_otp( $user, $username, $password ) {
 	// without this, but if the option ever got set directly (WP-CLI, direct
 	// DB edit), don't lock users out waiting on email that was never verified.
 	if ( ! gm_otp_option( GM_OTP_SMTP_CONFIRMED_OPTION ) ) {
-		gm_otp_log( 'skipped: gm_otp_enabled is on but email delivery was never confirmed in settings â€” refusing to risk locking users out' );
+		gm_otp_log( 'skipped: gm_otp_enabled is on but email delivery was never confirmed in settings — refusing to risk locking users out' );
 		return $user;
 	}
 
 	// Some security plugins (Wordfence Login Security's own captcha is the
 	// known case, error code "wfls_captcha_verify") run their own check
-	// *before* this filter and reject the login outright if it fails â€”
+	// *before* this filter and reject the login outright if it fails —
 	// independent of whether the username/password were actually correct.
 	// Since GM OTP is already acting as the second factor here, a second,
 	// broken captcha in front of it just locks real users out. Re-verify
 	// the credentials directly against core; if they're genuinely valid,
 	// proceed with our own OTP flow instead of honoring that rejection.
 	if ( is_wp_error( $user ) && 'wfls_captcha_verify' === $user->get_error_code() ) {
-		gm_otp_log( "Wordfence captcha rejected username='{$username}' (wfls_captcha_verify) â€” re-checking credentials directly against core, bypassing that check" );
+		gm_otp_log( "Wordfence captcha rejected username='{$username}' (wfls_captcha_verify) — re-checking credentials directly against core, bypassing that check" );
 		$real_user = wp_authenticate_username_password( null, $username, $password );
 		if ( $real_user instanceof WP_User ) {
-			gm_otp_log( "credentials for '{$username}' are genuinely valid â€” proceeding despite the captcha rejection" );
+			gm_otp_log( "credentials for '{$username}' are genuinely valid — proceeding despite the captcha rejection" );
 			$user = $real_user;
 		} else {
-			gm_otp_log( "credentials for '{$username}' are also invalid on their own â€” leaving the original rejection in place" );
+			gm_otp_log( "credentials for '{$username}' are also invalid on their own — leaving the original rejection in place" );
 		}
 	}
 
@@ -66,7 +66,7 @@ function gm_otp_maybe_require_otp( $user, $username, $password ) {
 	}
 
 	// Non-interactive logins (XML-RPC, REST/application passwords) can't show a
-	// prompt and must never receive HTML output â€” skip OTP entirely there.
+	// prompt and must never receive HTML output — skip OTP entirely there.
 	if ( ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
 		gm_otp_log( "skipped: non-interactive login (XML-RPC/REST) for user_id={$user->ID}" );
 		return $user;
@@ -75,7 +75,7 @@ function gm_otp_maybe_require_otp( $user, $username, $password ) {
 	// Two-phase AJAX login handling. Some security plugins (Wordfence Login
 	// Security's reCAPTCHA is the known case) authenticate ONCE over
 	// admin-ajax.php to pre-validate credentials, then submit the real login
-	// form to wp-login.php â€” running this filter TWICE for a single login. If
+	// form to wp-login.php — running this filter TWICE for a single login. If
 	// the code was already entered and accepted in that earlier AJAX phase, a
 	// single-use grace token lets the follow-up wp-login.php POST through
 	// instead of demanding a brand-new code (which would also overwrite the
@@ -86,21 +86,21 @@ function gm_otp_maybe_require_otp( $user, $username, $password ) {
 	if ( $grace_cookie ) {
 		$grace_stored = get_transient( 'gm_otp_grace_' . $user->ID );
 		if ( $grace_stored && hash_equals( (string) $grace_stored, (string) $grace_cookie ) ) {
-			gm_otp_log( "user_id={$user->ID}: consuming OTP grace token â€” already passed OTP in this login's AJAX phase, skipping the second demand" );
+			gm_otp_log( "user_id={$user->ID}: consuming OTP grace token — already passed OTP in this login's AJAX phase, skipping the second demand" );
 			delete_transient( 'gm_otp_grace_' . $user->ID );
 			setcookie( 'gm_otp_grace', '', time() - 3600, COOKIEPATH, COOKIE_DOMAIN );
 			return $user;
 		}
 	}
 
-	// Password is genuinely correct on THIS submission â€” now see if there's
+	// Password is genuinely correct on THIS submission — now see if there's
 	// a pending code (from an earlier submission) for this SAME user. Only
 	// ever honored when the cookie's stored user_id matches $user->ID, so a
 	// valid password for user A can never consume user B's pending code.
 	$token  = isset( $_COOKIE[ GM_OTP_COOKIE ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ GM_OTP_COOKIE ] ) ) : '';
 	$stored = $token ? get_transient( 'gm_otp_' . $token ) : false;
 	if ( $stored && (int) $stored['user_id'] !== (int) $user->ID ) {
-		$stored = false; // stale/foreign cookie â€” ignore it, start fresh below
+		$stored = false; // stale/foreign cookie — ignore it, start fresh below
 	}
 
 	if ( gm_otp_get_lockout( $user->ID ) ) {
@@ -133,7 +133,7 @@ function gm_otp_maybe_require_otp( $user, $username, $password ) {
 	$submitted = isset( $_POST['gm_otp_code'] ) ? preg_replace( '/\D/', '', gm_otp_input( $_POST, 'gm_otp_code' ) ) : '';
 
 	if ( '' === $submitted ) {
-		// Code field wasn't filled in on this submission â€” just re-show
+		// Code field wasn't filled in on this submission — just re-show
 		// the pending prompt rather than treating it as a wrong guess.
 		gm_otp_set_show_cookie();
 		$GLOBALS['gm_otp_pending'] = array(
@@ -157,10 +157,10 @@ function gm_otp_maybe_require_otp( $user, $username, $password ) {
 			$grace = wp_generate_password( 32, false );
 			set_transient( 'gm_otp_grace_' . $user->ID, $grace, 2 * MINUTE_IN_SECONDS );
 			setcookie( 'gm_otp_grace', $grace, time() + 2 * MINUTE_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN, is_ssl(), true );
-			gm_otp_log( "user_id={$user->ID}: correct code during AJAX phase â€” minted grace token for the follow-up wp-login.php POST" );
+			gm_otp_log( "user_id={$user->ID}: correct code during AJAX phase — minted grace token for the follow-up wp-login.php POST" );
 		}
 
-		gm_otp_log( "user_id={$user->ID} entered correct code â€” login proceeding" );
+		gm_otp_log( "user_id={$user->ID} entered correct code — login proceeding" );
 		return $user; // core's wp_signon() sets the auth cookie and redirects from here
 	}
 
@@ -173,7 +173,7 @@ function gm_otp_maybe_require_otp( $user, $username, $password ) {
 		delete_transient( $attempts_key );
 		set_transient( 'gm_otp_lockout_' . $user->ID, time() + $lockout_mins * MINUTE_IN_SECONDS, $lockout_mins * MINUTE_IN_SECONDS );
 		gm_otp_clear_pending( $token );
-		gm_otp_log( "user_id={$user->ID} hit max wrong-code attempts â€” locked out for {$lockout_mins}m" );
+		gm_otp_log( "user_id={$user->ID} hit max wrong-code attempts — locked out for {$lockout_mins}m" );
 		return new WP_Error( 'gm_otp_locked', gm_otp_lockout_message( $user->ID ) );
 	}
 
@@ -266,7 +266,7 @@ function gm_otp_resend_code( $token, array $stored, WP_User $user ) {
 
 /* -------------------------------------------------------------------------
  * Dedicated code DIALOG page (non-AJAX logins).
- * Used when the login is a normal POST rather than an AJAX submission â€” it
+ * Used when the login is a normal POST rather than an AJAX submission — it
  * bounces the browser to wp-login.php?action=gm_otp, which shows the code
  * dialog and completes the login itself. This is what makes GM OTP work on
  * sites whose login form is a custom page that would otherwise hijack the
@@ -313,13 +313,13 @@ function gm_otp_post_bounce( $url, array $fields ) {
 	?>
 	<!DOCTYPE html>
 	<html>
-	<head><meta charset="utf-8"><title><?php esc_html_e( 'Redirectingâ€¦' ); ?></title></head>
+	<head><meta charset="utf-8"><title><?php esc_html_e( 'Redirecting…' ); ?></title></head>
 	<body>
 		<form id="gm-otp-bounce" method="post" action="<?php echo esc_url( $url ); ?>">
 			<?php foreach ( $fields as $name => $value ) : ?>
 				<input type="hidden" name="<?php echo esc_attr( $name ); ?>" value="<?php echo esc_attr( $value ); ?>" />
 			<?php endforeach; ?>
-			<p><?php esc_html_e( 'Redirectingâ€¦' ); ?> <button type="submit"><?php esc_html_e( 'Continue' ); ?></button></p>
+			<p><?php esc_html_e( 'Redirecting…' ); ?> <button type="submit"><?php esc_html_e( 'Continue' ); ?></button></p>
 		</form>
 		<script>document.getElementById('gm-otp-bounce').submit();</script>
 	</body>
@@ -330,7 +330,7 @@ function gm_otp_post_bounce( $url, array $fields ) {
 /**
  * Resilience: if a proxy/security tool corrupts the bounce and the user lands
  * on the plain login screen with a valid pending-OTP cookie, show the dialog
- * anyway â€” the cookie is the source of truth, not the URL's action.
+ * anyway — the cookie is the source of truth, not the URL's action.
  */
 add_action( 'login_form_login', function () {
 	$token = isset( $_COOKIE[ GM_OTP_COOKIE ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ GM_OTP_COOKIE ] ) ) : '';
@@ -344,12 +344,48 @@ add_action( 'login_form_login', function () {
 	}
 
 	$stored = get_transient( 'gm_otp_' . $token );
-	// Only dialog-flow sessions store 'redirect_to' â€” inline/AJAX pending
+	// Only dialog-flow sessions store 'redirect_to' — inline/AJAX pending
 	// sessions must NOT be pulled into the dialog page, so check for that key.
 	if ( $stored && array_key_exists( 'redirect_to', $stored ) ) {
 		gm_otp_handle_verify_page();
 	}
 }, 5 );
+
+/**
+ * Send the just-logged-in user to the right place after the dialog flow.
+ *
+ * Mirrors core wp-login.php's own logic so third-party redirect rules and
+ * multisite behaviour are honoured instead of always dumping the user on
+ * wp-admin. Specifically it applies the `login_redirect` filter (used by
+ * LoginWP / Peter's Login Redirect, QL Custom Registration/Redirector and
+ * similar role/capability-based redirect plugins), then falls back to core's
+ * multisite/capability defaults. The inline (AJAX) flow doesn't need this — it
+ * returns the WP_User and lets core run exactly this same logic.
+ */
+function gm_otp_login_redirect( WP_User $user, $requested_redirect_to = '' ) {
+	$redirect_to = $requested_redirect_to ? $requested_redirect_to : admin_url();
+
+	/** This filter is documented in wp-login.php */
+	$redirect_to = apply_filters( 'login_redirect', $redirect_to, $requested_redirect_to, $user );
+
+	if ( empty( $redirect_to ) || 'wp-admin/' === $redirect_to || admin_url() === $redirect_to ) {
+		// A plugin didn't override it — apply core's own multisite/cap defaults.
+		if ( is_multisite() && ! get_active_blog_for_user( $user->ID ) && ! is_super_admin( $user->ID ) ) {
+			$redirect_to = user_admin_url();
+		} elseif ( is_multisite() && ! $user->has_cap( 'read' ) ) {
+			$redirect_to = get_dashboard_url( $user->ID );
+		} elseif ( ! $user->has_cap( 'edit_posts' ) ) {
+			$redirect_to = $user->has_cap( 'read' ) ? admin_url( 'profile.php' ) : home_url();
+		}
+		gm_otp_log( "dialog page: redirect resolved to {$redirect_to} (core defaults) for user_id={$user->ID}" );
+		wp_safe_redirect( $redirect_to );
+		exit;
+	}
+
+	gm_otp_log( "dialog page: redirect resolved to {$redirect_to} (login_redirect filter) for user_id={$user->ID}" );
+	wp_safe_redirect( $redirect_to );
+	exit;
+}
 
 /**
  * The dialog page itself: wp-login.php?action=gm_otp
@@ -360,7 +396,7 @@ function gm_otp_handle_verify_page() {
 	$stored = $token ? get_transient( 'gm_otp_' . $token ) : false;
 
 	if ( ! $stored ) {
-		gm_otp_log( 'dialog page: no valid pending cookie/transient â€” back to login' );
+		gm_otp_log( 'dialog page: no valid pending cookie/transient — back to login' );
 		wp_safe_redirect( add_query_arg( 'action', 'login', wp_login_url() ) );
 		exit;
 	}
@@ -409,8 +445,8 @@ function gm_otp_handle_verify_page() {
 			setcookie( GM_OTP_COOKIE, '', time() - 3600, COOKIEPATH, COOKIE_DOMAIN );
 			wp_set_auth_cookie( $stored['user_id'], (bool) $stored['remember'] );
 			do_action( 'wp_login', $user_data->user_login, $user_data );
-			gm_otp_log( "dialog page: correct code â€” logging user_id={$stored['user_id']} in" );
-			wp_safe_redirect( $stored['redirect_to'] ? $stored['redirect_to'] : admin_url() );
+			gm_otp_log( "dialog page: correct code — logging user_id={$stored['user_id']} in" );
+			gm_otp_login_redirect( $user_data, (string) $stored['redirect_to'] );
 			exit;
 		}
 
@@ -543,7 +579,7 @@ function gm_otp_clear_pending( $token ) {
 
 /**
  * A deliberately non-secret, non-HttpOnly companion cookie the login-page
- * script polls for. It only signals "a code is pending, reveal the field" â€”
+ * script polls for. It only signals "a code is pending, reveal the field" —
  * the actual token stays in the HttpOnly GM_OTP_COOKIE that JS can't read.
  * Needed because AJAX login flows never re-render the page, so there's no
  * server-side moment to un-hide the field on.
@@ -592,7 +628,7 @@ function gm_otp_lockout_message( $user_id ) {
 
 /**
  * Renders the 6-digit code field directly on the login form, right below
- * username/password â€” hooked on 'login_form', so it lives INSIDE the login
+ * username/password — hooked on 'login_form', so it lives INSIDE the login
  * <form>. Crucial detail: the field is ALWAYS present in the markup (just
  * hidden until a code is actually pending), never conditionally omitted.
  *
@@ -605,7 +641,7 @@ function gm_otp_lockout_message( $user_id ) {
  * non-secret gm_otp_show cookie our server sets alongside the real token).
  *
  * On a normal (non-AJAX) login the server re-renders with
- * $GLOBALS['gm_otp_pending'] set and the field is already visible â€” the
+ * $GLOBALS['gm_otp_pending'] set and the field is already visible — the
  * cookie-poll path is simply never needed there.
  */
 add_action( 'login_form', 'gm_otp_render_field' );
@@ -645,9 +681,9 @@ function gm_otp_render_field() {
 			<input type="password" name="gm_otp_code" id="gm_otp_code" class="input" inputmode="numeric" maxlength="6" autocomplete="one-time-code" style="width:100%;" />
 		</p>
 		<p>
-			<?php // Hidden flag, not the button's own name â€” button values aren't reliably serialized by AJAX login submitters. ?>
+			<?php // Hidden flag, not the button's own name — button values aren't reliably serialized by AJAX login submitters. ?>
 			<input type="hidden" name="gm_otp_resend" id="gm_otp_resend_flag" value="" />
-			<?php // type="button", NOT submit â€” otherwise pressing Enter in the code field would fire this (the first submit button) and resend instead of logging in. ?>
+			<?php // type="button", NOT submit — otherwise pressing Enter in the code field would fire this (the first submit button) and resend instead of logging in. ?>
 			<button type="button" id="gm_otp_resend" class="button" disabled="disabled"></button>
 		</p>
 	</div>

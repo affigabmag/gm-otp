@@ -3,7 +3,7 @@ Contributors: affigabmag
 Tags: login, security, two factor, otp, email
 Requires at least: 5.8
 Tested up to: 7.0
-Stable tag: 3.16.0
+Stable tag: 3.18.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,6 +30,22 @@ Features:
 3. Configure under Settings > GM OTP (or Network Admin > Settings > GM OTP on multisite)
 
 == Changelog ==
+
+= 3.18.2 =
+* Fixed the Log section's buttons/toggle posting to the old Settings URL (the plugin moved to a top-level menu in 3.11.2). The "Enable logging" checkbox now actually saves and persists, and View/Clear Log work from the correct page.
+
+= 3.18.1 =
+* When logging is disabled, the "View Log" and "Clear Log" buttons are now shown disabled (nothing to view or clear).
+
+= 3.18.0 =
+* Logging is now opt-in: added an "Enable logging" checkbox in the Log section. When off (the default) no log entries are written; when on, GM OTP creates and appends to the log file. Toggling saves immediately.
+
+= 3.17.1 =
+* Fixed garbled characters (e.g. em-dashes showing as strange symbols) in the settings screens, caused by an encoding slip when the plugin was split into includes in 3.15.0.
+* Rewrote the "Lockout risk acknowledged" text as a short, clear bullet list.
+
+= 3.17.0 =
+* Fixed the post-login redirect on the dialog flow always going to wp-admin. It now mirrors WordPress core: applies the `login_redirect` filter (so role/capability redirect plugins such as LoginWP / Peter's Login Redirect and custom redirectors decide the destination), honors an explicit redirect_to, and falls back to core's multisite/capability defaults (including sending a user to their own site on multisite). The inline/AJAX flow already did this.
 
 = 3.16.0 =
 * Moved the dialog page's static CSS out to assets/gm-otp-dialog.css (properly enqueued) instead of an inline style block. Data-driven scripts (nonces, timers, translated strings) remain inline by design.

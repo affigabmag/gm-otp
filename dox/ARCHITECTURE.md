@@ -57,6 +57,18 @@ core's own username/password check at 20). Decision order:
      custom login pages (e.g. ql-registration) that hijack the re-rendered
      login form.
 
+### Post-login redirect
+
+Both transports honour normal WordPress redirect rules. The inline/AJAX flow
+returns the `WP_User` and lets core's `wp_signon()` resolve the destination.
+The dialog flow completes the login itself, so it calls
+`gm_otp_login_redirect()` which mirrors core's `wp-login.php`: it applies the
+`login_redirect` filter (used by LoginWP / Peter's Login Redirect, QL Custom
+Registration/Redirector and other role/capability redirectors), honours an
+explicit `redirect_to`, and otherwise falls back to core's multisite/capability
+defaults (e.g. sending a user to their own site's dashboard on multisite). It
+never hard-codes `wp-admin`.
+
 ### Why two transports
 
 A single approach can't cover both:
@@ -87,6 +99,11 @@ A single approach can't cover both:
 
 ## Logging (`includes/core.php`)
 
+- Logging is **opt-in**: the `gm_otp_logging_enabled` option
+  (`GM_OTP_LOGGING_OPTION`, off by default) gates it. `gm_otp_log()` returns
+  immediately when it's off. The "Enable logging" checkbox in the Log section
+  toggles it (saved via `gm_otp_update_option()`, the write counterpart of
+  `gm_otp_option()`); View Log / Clear Log are disabled while it's off.
 - `gm_otp_log()` writes to `wp-content/gm-otp-logs/otp.log` (protected by
   `.htaccess`/`index.php`) and mirrors to `error_log()`.
 - The settings pages show a log viewer with View/Clear for both the plugin log

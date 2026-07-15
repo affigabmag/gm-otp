@@ -28,9 +28,24 @@ function wp_doing_ajax() { return $GLOBALS['t_ajax']; }
 function get_transient( $k ) { return array_key_exists( $k, $GLOBALS['t_trans'] ) ? $GLOBALS['t_trans'][ $k ] : false; }
 function set_transient( $k, $v, $t = 0 ) { $GLOBALS['t_trans'][ $k ] = $v; return true; }
 function delete_transient( $k ) { unset( $GLOBALS['t_trans'][ $k ] ); return true; }
-function add_filter() { return true; }
-function add_action() { return true; }
+$GLOBALS['t_filters'] = array();
+function add_filter( $hook, $cb, $prio = 10, $args = 1 ) { $GLOBALS['t_filters'][ $hook ][] = $cb; return true; }
+function add_action( $hook, $cb, $prio = 10, $args = 1 ) { return true; }
 function has_filter() { return false; }
+function apply_filters( $hook, $value ) {
+	$args = array_slice( func_get_args(), 1 );
+	if ( ! empty( $GLOBALS['t_filters'][ $hook ] ) ) {
+		foreach ( $GLOBALS['t_filters'][ $hook ] as $cb ) { $args[0] = call_user_func_array( $cb, $args ); }
+	}
+	return $args[0];
+}
+function get_active_blog_for_user( $id ) { return 1; }
+function user_admin_url() { return 'https://example.test/wp-admin/user/'; }
+function get_dashboard_url( $id ) { return 'https://example.test/wp-admin/'; }
+function is_super_admin( $id = 0 ) { return true; }
+function home_url( $p = '' ) { return 'https://example.test' . $p; }
+function admin_url( $p = '' ) { return 'https://example.test/wp-admin/' . $p; }
+function network_admin_url( $p = '' ) { return 'https://example.test/wp-admin/network/' . $p; }
 function plugin_basename( $f ) { return basename( dirname( $f ) ) . '/' . basename( $f ); }
 function plugin_dir_url( $f ) { return 'https://example.test/wp-content/plugins/gm-otp/'; }
 function wp_enqueue_style() {}
@@ -57,7 +72,7 @@ function wp_authenticate_username_password( $u, $user, $pass ) { return $GLOBALS
 function add_query_arg( $k, $v, $url ) { return $url . ( strpos( $url, '?' ) === false ? '?' : '&' ) . $k . '=' . $v; }
 function wp_set_auth_cookie( $id, $r = false ) { $GLOBALS['t_auth_cookie_set'] = $id; }
 function do_action() {}
-function wp_safe_redirect( $u ) { $GLOBALS['t_redirect'] = $u; }
+function wp_safe_redirect( $u ) { $GLOBALS['t_redirect'] = $u; echo "REDIRECT:$u\n"; }
 function login_header() {}
 function login_footer() {}
 function wp_nonce_field() {}
@@ -89,6 +104,7 @@ class WP_User {
 	public function __construct( $id = 0, $email = '', $login = '' ) {
 		$this->ID = $id; $this->user_email = $email; $this->user_login = $login;
 	}
+	public function has_cap( $cap ) { return true; } // admin-ish user for tests
 }
 
 $GLOBALS['_SERVER']['SCRIPT_NAME'] = 'cli-test';

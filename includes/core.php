@@ -10,11 +10,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Logging. Writes to wp-content/gm-otp-logs/otp.log (outside the plugin
  * folder so it survives updates) with an .htaccess/index.php pair so the
- * file can't be requested directly over HTTP â€” it can contain email
+ * file can't be requested directly over HTTP — it can contain email
  * addresses and (briefly) valid codes. Also mirrors to error_log() so it
  * shows up alongside PHP's own log (e.g. Local's logs/php/error.log).
  */
 function gm_otp_log( $message ) {
+	// Logging is opt-in — enable it with the checkbox in Settings > GM OTP > Log.
+	if ( ! gm_otp_option( GM_OTP_LOGGING_OPTION ) ) {
+		return;
+	}
 	if ( ! file_exists( GM_OTP_LOG_DIR ) ) {
 		wp_mkdir_p( GM_OTP_LOG_DIR );
 		file_put_contents( GM_OTP_LOG_DIR . '/index.php', "<?php\n// Silence is golden.\n" );
@@ -38,10 +42,10 @@ function gm_otp_input( array $source, $key, $default = '' ) {
 }
 
 /**
- * Fires the instant this file is parsed â€” before plugins_loaded, before any
+ * Fires the instant this file is parsed — before plugins_loaded, before any
  * of our own hooks run. If a login attempt never produces even this line,
  * the plugin file itself isn't executing for that request (wrong site,
- * not actually active there, or something fataled earlier in bootstrap) â€”
+ * not actually active there, or something fataled earlier in bootstrap) —
  * as opposed to running fine but "authenticate" never firing.
  */
 if ( false !== strpos( gm_otp_input( $_SERVER, 'SCRIPT_NAME' ), 'wp-login.php' ) ) {
@@ -83,11 +87,11 @@ if ( false !== strpos( gm_otp_input( $_SERVER, 'SCRIPT_NAME' ), 'wp-login.php' )
 	}, 1 );
 
 	// If WP fell back to the default login screen despite action=gm_otp
-	// being requested, THIS fires instead of login_form_gm_otp â€” proving
+	// being requested, THIS fires instead of login_form_gm_otp — proving
 	// core's own validity check rejected our action for this request.
 	add_action( 'login_form_login', function () {
 		gm_otp_log( sprintf(
-			'login_form_login fired (fallback) â€” GET[action] at this point=%s, REQUEST[action]=%s',
+			'login_form_login fired (fallback) — GET[action] at this point=%s, REQUEST[action]=%s',
 			gm_otp_input( $_GET, 'action', '(unset)' ),
 			gm_otp_input( $_REQUEST, 'action', '(unset)' )
 		) );
@@ -98,7 +102,7 @@ function gm_otp_read_log_tail( $max_bytes = 50000 ) {
 	if ( ! file_exists( GM_OTP_LOG_FILE ) ) {
 		return '';
 	}
-	// file_get_contents() + substr() instead of fopen()/fseek()/fread() â€”
+	// file_get_contents() + substr() instead of fopen()/fseek()/fread() —
 	// avoids the low-level file handle entirely for what's just a tail read.
 	$contents = file_get_contents( GM_OTP_LOG_FILE );
 	return strlen( $contents ) > $max_bytes ? substr( $contents, -$max_bytes ) : $contents;
@@ -109,7 +113,7 @@ function gm_otp_read_log_tail( $max_bytes = 50000 ) {
  * *somewhere* on disk (PHP-FPM/Apache/Nginx frequently have their own
  * error log independent of PHP's own setting). Rather than give up, probe
  * the handful of paths that cover the vast majority of real hosting setups
- * â€” first one that's actually readable from this PHP process wins.
+ * — first one that's actually readable from this PHP process wins.
  */
 function gm_otp_find_php_error_log() {
 	$configured = ini_get( 'error_log' );
@@ -141,7 +145,7 @@ function gm_otp_find_php_error_log() {
 }
 
 /**
- * Tail whichever file gm_otp_find_php_error_log() locates â€” no FTP/SSH/
+ * Tail whichever file gm_otp_find_php_error_log() locates — no FTP/SSH/
  * hosting-panel access needed, as long as PHP's own worker can read it
  * (usually true, since it's frequently the same worker writing to it).
  */
@@ -171,39 +175,62 @@ function gm_otp_render_log_viewer( $base_url ) {
 			file_put_contents( $php_log_path, '' );
 			echo '<div class="notice notice-success"><p>' . esc_html__( 'PHP error log cleared.' ) . '</p></div>';
 		} else {
-			echo '<div class="notice notice-error"><p>' . esc_html__( 'Could not clear the PHP error log â€” none found, or the file is not writable by PHP (it may be a shared system log). Clear it via SSH/hosting panel instead.' ) . '</p></div>';
+			echo '<div class="notice notice-error"><p>' . esc_html__( 'Could not clear the PHP error log — none found, or the file is not writable by PHP (it may be a shared system log). Clear it via SSH/hosting panel instead.' ) . '</p></div>';
 		}
 	}
 
-	$show_log  = ! empty( $_GET['gm_otp_view_log'] );
-	$check_dir = file_exists( GM_OTP_LOG_DIR ) ? GM_OTP_LOG_DIR : WP_CONTENT_DIR;
-	// Read-only diagnostic display, not a file modification â€” WP_Filesystem is unnecessary here.
+	if ( wp_verify_nonce( gm_otp_input( $_POST, 'gm_otp_logging_nonce' ), 'gm_otp_logging' ) ) {
+		gm_otp_update_option( GM_OTP_LOGGING_OPTION, ! empty( $_POST[ GM_OTP_LOGGING_OPTION ] ) );
+		echo '<div class="notice notice-success"><p>' . esc_html__( 'Logging preference saved.' ) . '</p></div>';
+	}
+
+	$logging_on = (bool) gm_otp_option( GM_OTP_LOGGING_OPTION );
+	$show_log   = $logging_on && ! empty( $_GET['gm_otp_view_log'] );
+	$check_dir  = file_exists( GM_OTP_LOG_DIR ) ? GM_OTP_LOG_DIR : WP_CONTENT_DIR;
+	// Read-only diagnostic display, not a file modification — WP_Filesystem is unnecessary here.
 	$writable = is_writable( $check_dir ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable
 	?>
 	<div style="display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start;">
 	<div style="flex:1;min-width:340px;">
 	<h2><?php esc_html_e( 'Log' ); ?></h2>
+	<form method="post" action="<?php echo esc_url( $base_url ); ?>" style="margin:0 0 10px;">
+		<?php wp_nonce_field( 'gm_otp_logging', 'gm_otp_logging_nonce' ); ?>
+		<label>
+			<input type="checkbox" name="<?php echo esc_attr( GM_OTP_LOGGING_OPTION ); ?>" value="1" <?php checked( $logging_on ); ?> onchange="this.form.submit();" />
+			<strong><?php esc_html_e( 'Enable logging' ); ?></strong> — <?php esc_html_e( 'when on, GM OTP creates and appends to the log file below (useful for troubleshooting).' ); ?>
+		</label>
+		<noscript><button type="submit" class="button" style="margin-left:6px;"><?php esc_html_e( 'Save' ); ?></button></noscript>
+	</form>
 	<p>
+		<?php if ( ! $logging_on ) : ?>
+			<span style="color:#646970;"><?php esc_html_e( 'Logging is off — no new entries are being recorded.' ); ?></span><br />
+		<?php endif; ?>
 		<?php if ( $writable ) : ?>
-			<span style="color:#008a20;">&#10003;</span> <?php esc_html_e( 'Log directory is writable â€” logging should work.' ); ?>
+			<span style="color:#008a20;">&#10003;</span> <?php esc_html_e( 'Log directory is writable — logging should work.' ); ?>
 		<?php else : ?>
 			<span style="color:#d63638;">&#10007;</span>
 			<?php
 			printf(
 				/* translators: %s: log directory path */
-				esc_html__( 'NOT writable: %s â€” file logging will silently fail here. Check error_log() / your host\'s PHP error log instead.' ),
+				esc_html__( 'NOT writable: %s — file logging will silently fail here. Check error_log() / your host\'s PHP error log instead.' ),
 				'<code>' . esc_html( GM_OTP_LOG_DIR ) . '</code>'
 			);
 			?>
 		<?php endif; ?>
 	</p>
 	<p style="display:flex;gap:8px;align-items:center;">
-		<a href="<?php echo esc_url( add_query_arg( 'gm_otp_view_log', '1', $base_url ) ); ?>" class="button">
-			<?php esc_html_e( 'View Log' ); ?>
-		</a>
-		<button type="submit" form="gm_otp_clear_log_form" class="button button-link-delete" onclick="return confirm('<?php echo esc_js( __( 'Clear the GM OTP log?' ) ); ?>');">
-			<?php esc_html_e( 'Clear Log' ); ?>
-		</button>
+		<?php if ( $logging_on ) : ?>
+			<a href="<?php echo esc_url( add_query_arg( 'gm_otp_view_log', '1', $base_url ) ); ?>" class="button">
+				<?php esc_html_e( 'View Log' ); ?>
+			</a>
+			<button type="submit" form="gm_otp_clear_log_form" class="button button-link-delete" onclick="return confirm('<?php echo esc_js( __( 'Clear the GM OTP log?' ) ); ?>');">
+				<?php esc_html_e( 'Clear Log' ); ?>
+			</button>
+		<?php else : ?>
+			<?php // Logging is off — nothing to view or clear, so both are disabled. ?>
+			<button type="button" class="button" disabled="disabled"><?php esc_html_e( 'View Log' ); ?></button>
+			<button type="button" class="button" disabled="disabled"><?php esc_html_e( 'Clear Log' ); ?></button>
+		<?php endif; ?>
 	</p>
 	<?php // Hidden form the always-visible "Clear Log" button submits (nonce is verified at the top of this function). ?>
 	<form id="gm_otp_clear_log_form" method="post" action="<?php echo esc_url( $base_url ); ?>" style="display:none;">
@@ -234,7 +261,7 @@ function gm_otp_render_log_viewer( $base_url ) {
 				'<code>' . esc_html( $found_path ) . '</code>'
 			);
 			if ( $found_path !== $configured_path ) {
-				echo ' ' . esc_html__( '(not the one PHP itself is configured to use â€” found by checking common hosting paths instead).' );
+				echo ' ' . esc_html__( '(not the one PHP itself is configured to use — found by checking common hosting paths instead).' );
 			}
 			?>
 		<?php else : ?>
@@ -246,7 +273,7 @@ function gm_otp_render_log_viewer( $base_url ) {
 		printf(
 			/* translators: %s: configured error_log path */
 			esc_html__( "PHP's own configured error_log directive: %s" ),
-			'<code>' . esc_html( $configured_path ? $configured_path : '(not set â€” logging to stderr/syslog, not a file)' ) . '</code>'
+			'<code>' . esc_html( $configured_path ? $configured_path : '(not set — logging to stderr/syslog, not a file)' ) . '</code>'
 		);
 		?>
 		<br />
@@ -303,7 +330,15 @@ function gm_otp_option( $key, $default = false ) {
 }
 
 /**
- * True if $user should skip OTP entirely â€” either their user ID or any of
+ * Write counterpart of gm_otp_option() — routes to the network option on
+ * multisite, the per-site option otherwise.
+ */
+function gm_otp_update_option( $key, $value ) {
+	return is_multisite() ? update_site_option( $key, $value ) : update_option( $key, $value );
+}
+
+/**
+ * True if $user should skip OTP entirely — either their user ID or any of
  * their roles is on the exemption lists configured in settings.
  */
 function gm_otp_is_exempt( WP_User $user ) {

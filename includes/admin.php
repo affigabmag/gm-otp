@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Settings page: available both as a top-level admin menu item and under
  * Settings > GM OTP (same slug/callback, so both entries open the same page).
  * On multisite this becomes read-only, pointing at the network settings
- * page instead â€” the network switch is what actually gates the feature.
+ * page instead — the network switch is what actually gates the feature.
  */
 add_action( 'admin_menu', function () {
 	add_menu_page( 'GM OTP', 'GM OTP', 'manage_options', 'gm-otp', 'gm_otp_render_settings_page', 'dashicons-lock', 80 );
@@ -121,7 +121,7 @@ function gm_otp_render_settings_page() {
 				<p><a href="<?php echo esc_url( network_admin_url( 'settings.php?page=gm-otp-network' ) ); ?>"><?php esc_html_e( 'Change at network level' ); ?></a></p>
 			<?php endif; ?>
 			<hr />
-			<?php gm_otp_render_log_viewer( admin_url( 'options-general.php?page=gm-otp' ) ); ?>
+			<?php gm_otp_render_log_viewer( admin_url( 'admin.php?page=gm-otp' ) ); ?>
 		</div>
 		<?php
 		return;
@@ -175,13 +175,13 @@ function gm_otp_render_settings_page() {
 			<?php submit_button(); ?>
 		</form>
 		<hr />
-		<?php gm_otp_render_log_viewer( admin_url( 'options-general.php?page=gm-otp' ) ); ?>
+		<?php gm_otp_render_log_viewer( admin_url( 'admin.php?page=gm-otp' ) ); ?>
 	</div>
 	<?php
 }
 
 /**
- * Shared "Max attempts" + "Lockout duration" row â€” the two live side by side
+ * Shared "Max attempts" + "Lockout duration" row — the two live side by side
  * in a single form-table row instead of stacked.
  */
 function gm_otp_render_attempts_row( $max_attempts, $lockout_minutes ) {
@@ -252,7 +252,7 @@ function gm_otp_render_exemptions_field( $selected_roles, $selected_users ) {
 				</div>
 				<div>
 					<label style="display:block;font-weight:600;margin-bottom:4px;"><?php esc_html_e( 'Exempt users' ); ?></label>
-					<input type="text" id="gm_otp_exempt_users_filter" placeholder="<?php esc_attr_e( 'Filterâ€¦' ); ?>" style="width:320px;display:block;margin-bottom:6px;" />
+					<input type="text" id="gm_otp_exempt_users_filter" placeholder="<?php esc_attr_e( 'Filter…' ); ?>" style="width:320px;display:block;margin-bottom:6px;" />
 					<div style="width:320px;max-height:220px;overflow-y:auto;border:1px solid #8c8f94;padding:8px;background:#fff;">
 						<?php
 						$users = get_users( array(
@@ -283,7 +283,7 @@ function gm_otp_render_exemptions_field( $selected_roles, $selected_users ) {
 					</script>
 					<p class="description" style="max-width:320px;"><?php esc_html_e( 'These specific users never get an OTP prompt, regardless of role.' ); ?></p>
 					<?php if ( count( $users ) >= 500 ) : ?>
-						<p class="description" style="color:#d63638;max-width:320px;"><?php esc_html_e( 'Showing first 500 users only â€” use role exemptions for larger sets.' ); ?></p>
+						<p class="description" style="color:#d63638;max-width:320px;"><?php esc_html_e( 'Showing first 500 users only — use role exemptions for larger sets.' ); ?></p>
 					<?php endif; ?>
 				</div>
 			</div>
@@ -317,7 +317,7 @@ function gm_otp_maybe_send_test_email() {
 /**
  * Shared "Enable OTP login" row: requires an explicit, separate confirmation
  * that email delivery actually works before the checkbox is allowed to take
- * effect â€” self-reported via the checkbox, but backed by a real "Send Test
+ * effect — self-reported via the checkbox, but backed by a real "Send Test
  * Email" button so it's not just a blind checkbox.
  */
 function gm_otp_render_enable_field( $enabled, $smtp_confirmed, $test_result, $label, $lockout_ack = false ) {
@@ -358,18 +358,18 @@ function gm_otp_render_enable_field( $enabled, $smtp_confirmed, $test_result, $l
 					<p style="font-weight:600;margin:0 0 6px;"><?php esc_html_e( 'Email delivery confirmed' ); ?></p>
 					<label>
 						<input type="checkbox" name="<?php echo esc_attr( GM_OTP_SMTP_CONFIRMED_OPTION ); ?>" id="gm_otp_smtp_confirmed_checkbox" value="1" <?php checked( $smtp_confirmed ); ?> />
-						<?php esc_html_e( 'I have sent a test email and confirmed it arrived â€” email/SMTP delivery works on this site.' ); ?>
+						<?php esc_html_e( 'I have sent a test email and confirmed it arrived — email/SMTP delivery works on this site.' ); ?>
 					</label>
-					<p class="description"><?php esc_html_e( 'Required before "Enable OTP login" takes effect â€” otherwise users get locked out waiting for a code that never arrives.' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Required before "Enable OTP login" takes effect — otherwise users get locked out waiting for a code that never arrives.' ); ?></p>
 					<p>
 						<button type="submit" name="gm_otp_send_test_email" value="1" class="button"><?php esc_html_e( 'Send Test Email' ); ?></button>
 						<?php wp_nonce_field( 'gm_otp_test_email', 'gm_otp_test_email_nonce', false ); ?>
 					</p>
 					<?php if ( null !== $test_result ) : ?>
 						<?php if ( $test_result['sent'] ) : ?>
-							<p><span style="color:#008a20;">&#10003;</span> <?php printf( esc_html__( 'wp_mail() reported success sending to %s â€” check that inbox to be sure it really arrived (and isn\'t in spam).' ), esc_html( $test_result['to'] ) ); ?></p>
+							<p><span style="color:#008a20;">&#10003;</span> <?php printf( esc_html__( 'wp_mail() reported success sending to %s — check that inbox to be sure it really arrived (and isn\'t in spam).' ), esc_html( $test_result['to'] ) ); ?></p>
 						<?php else : ?>
-							<p><span style="color:#d63638;">&#10007;</span> <?php esc_html_e( 'wp_mail() reported failure. Email is NOT working â€” do not enable OTP login until this is fixed (install/configure an SMTP plugin).' ); ?></p>
+							<p><span style="color:#d63638;">&#10007;</span> <?php esc_html_e( 'wp_mail() reported failure. Email is NOT working — do not enable OTP login until this is fixed (install/configure an SMTP plugin).' ); ?></p>
 						<?php endif; ?>
 					<?php endif; ?>
 				</div>
@@ -377,9 +377,14 @@ function gm_otp_render_enable_field( $enabled, $smtp_confirmed, $test_result, $l
 					<p style="font-weight:600;margin:0 0 6px;"><?php esc_html_e( 'Lockout risk acknowledged' ); ?></p>
 					<label>
 						<input type="checkbox" name="<?php echo esc_attr( GM_OTP_LOCKOUT_ACK_OPTION ); ?>" id="gm_otp_lockout_ack_checkbox" value="1" <?php checked( $lockout_ack ); ?> />
-						<?php esc_html_e( 'I am aware that enabling OTP login could lock me out of the site (e.g. if email delivery stops working), and I have a recovery plan such as file-system/FTP/hosting access to rename or delete this plugin, or database access to disable it.' ); ?>
+						<?php esc_html_e( 'I understand the risk and have a recovery plan.' ); ?>
 					</label>
-					<p class="description"><?php esc_html_e( 'Required before "Enable OTP login" takes effect. If you ever get locked out, deleting or renaming the gm-otp plugin folder via FTP/SSH/hosting file manager disables OTP and restores normal login.' ); ?></p>
+					<ul class="description" style="list-style:disc;margin:8px 0 0 18px;">
+						<li><?php esc_html_e( 'Enabling OTP can lock everyone out if outgoing email stops working.' ); ?></li>
+						<li><?php esc_html_e( 'Recover: delete or rename the gm-otp plugin folder (FTP/SSH/file manager).' ); ?></li>
+						<li><?php esc_html_e( 'Or disable it in the database (set the gm_otp_enabled option to 0).' ); ?></li>
+						<li><?php esc_html_e( 'Must be checked before OTP login can be enabled.' ); ?></li>
+					</ul>
 				</div>
 			</div>
 			<script>
@@ -393,8 +398,8 @@ function gm_otp_render_enable_field( $enabled, $smtp_confirmed, $test_result, $l
 	</tr>
 	<script>
 	// The main "Save Changes" button stays disabled (grey) until BOTH gates
-	// are checked â€” "Email delivery confirmed" and "Lockout risk acknowledged"
-	// â€” then becomes the normal primary (blue) button. (The "Send Test Email"
+	// are checked — "Email delivery confirmed" and "Lockout risk acknowledged"
+	// — then becomes the normal primary (blue) button. (The "Send Test Email"
 	// button is separate and stays clickable so email can be verified first.)
 	//
 	// Deferred to DOMContentLoaded on purpose: this <script> is emitted inside
@@ -424,7 +429,7 @@ function gm_otp_render_enable_field( $enabled, $smtp_confirmed, $test_result, $l
 }
 
 /**
- * Network Admin > Settings > GM OTP â€” the network-wide switch.
+ * Network Admin > Settings > GM OTP — the network-wide switch.
  * update_site_option() has no options.php equivalent, so this page
  * handles its own form submission instead of using the Settings API.
  */
@@ -467,12 +472,12 @@ function gm_otp_render_network_settings_page() {
 	}
 	?>
 	<div class="wrap">
-		<h1>GM OTP â€” <?php esc_html_e( 'Network Settings' ); ?></h1>
+		<h1>GM OTP — <?php esc_html_e( 'Network Settings' ); ?></h1>
 		<p>
 			<?php
 			printf(
 				/* translators: 1: version, 2: build timestamp */
-				esc_html__( 'Version %1$s â€” updated %2$s' ),
+				esc_html__( 'Version %1$s — updated %2$s' ),
 				esc_html( GM_OTP_VERSION ),
 				esc_html( GM_OTP_BUILD_TIME )
 			);
