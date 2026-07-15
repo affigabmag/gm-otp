@@ -61,6 +61,10 @@ php tests/run-dialog.php   # non-AJAX login redirects to the dialog page
 
 ![GM OTP login with the code field](assets/screenshot-login-v2.png)
 
+**Two ways to enter the code** — inline on the login form (default, incl. AJAX/Wordfence logins), with an automatic fallback to a dedicated dialog page when the form can't show it (normal POST or custom login pages)
+
+![GM OTP code-entry modes and the fallback between them](assets/screenshot-transports.png)
+
 ## Features
 
 - **6-digit email code after password** — a lightweight second factor, no
